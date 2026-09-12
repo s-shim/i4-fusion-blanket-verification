@@ -129,21 +129,28 @@ Nuclear data library & ENDF/B-VIII.0 (official pre-generated HDF5, openmc.org) \
 \end{table}
 
 Two installation details are worth recording for reproducibility. First,
-the DAGMC-enabled OpenMC build must be requested explicitly via the conda
-build-string match \texttt{openmc=0.15.3=dagmc*nompi*}; the default
-\texttt{openmc} package resolves to a DAGMC-free, CSG-only build. Second,
-the PyPI \texttt{cad\_to\_dagmc} package pulls in a pip-distributed
-\texttt{gmsh} wheel with a pre-compiled binary that requires
-\texttt{libXft.so.2}, which is absent from a minimal WSL Ubuntu install and
-raises \texttt{OSError: libXft.so.2: cannot open shared object file}; this
-was resolved by removing the pip \texttt{gmsh} and installing both
+the DAGMC-enabled OpenMC build must be requested explicitly via the exact
+conda build-string match:
+\begin{quote}
+\ttfamily openmc=0.15.3=dagmc*nompi*
+\end{quote}
+the default \texttt{openmc} package otherwise resolves to a DAGMC-free,
+CSG-only build. Second, the PyPI \texttt{cad\_to\_dagmc} package pulls in
+a pip-distributed \texttt{gmsh} wheel with a pre-compiled binary that
+requires \texttt{libXft.so.2}, which is absent from a minimal WSL Ubuntu
+install and raises:
+\begin{quote}
+\ttfamily OSError: libXft.so.2: cannot open shared object file
+\end{quote}
+this was resolved by removing the pip \texttt{gmsh} and installing both
 \texttt{gmsh} and \texttt{python-gmsh} from conda-forge instead, which
 bundle their own dependencies.
 
 The full stack was verified end to end in three stages before attempting
 the sector model: (1) a pure constructive-solid-geometry OpenMC model (a
 water sphere with a 14.1~MeV point source) to confirm the nuclear-data path
-and transport engine; (2) a CadQuery-sphere~$\to$~\texttt{cad\_to\_dagmc}~$\to$~DAGMC~$\to$~OpenMC
+and transport engine; (2) a CadQuery-sphere $\to$ \texttt{cad\_to\_dagmc}
+$\to$ DAGMC $\to$ OpenMC
 round trip (a tungsten sphere under the same source) to confirm the
 CAD-to-neutronics bridge, which also produced a physically sensible
 leakage fraction above unity (1.556) due to $(n,2n)$ neutron multiplication
