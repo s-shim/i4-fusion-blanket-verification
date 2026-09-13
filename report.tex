@@ -40,9 +40,8 @@ and Brute-Force Verification}
 This report documents the construction and full brute-force verification of a
 small ($I=4$ sectors, $K=4$ candidate material recipes, $4^4=256$ total
 configurations) toroidal fusion breeding-blanket neutronics model, built as
-the planned small-instance verification case for Research Question 3 (RQ3)
-of an NSF Engineering Research Initiation proposal on surrogate-screened
-combinatorial search for PDE-constrained design problems. We describe the
+a brute-force-checkable verification instance for surrogate-screened
+combinatorial search on PDE-constrained design problems. We describe the
 open-source neutronics software stack (OpenMC with DAGMC support, Paramak,
 CadQuery, cad\_to\_dagmc), the specific geometry-construction approach that
 proved numerically robust after several CAD boolean-operation failures, the
@@ -56,7 +55,7 @@ directly checked for optimality rather than merely for exceeding a
 literature-reported target. We then run exactly that check: a
 surrogate-screened Adaptive Randomized Rounding search, using the same
 linear-surrogate and constraint-respecting-by-construction rounding
-framework as the completed nuclear-fuel-assembly case study, recovers a
+framework as a completed nuclear-fuel-assembly case study, recovers a
 frontier within 6\% relative TBR error of the true optimum at every one of
 25 swept cost levels (exact at 13 of 25) using only 68 of the 256 possible
 real evaluations. All code, configuration files, and raw per-call results
@@ -72,32 +71,34 @@ are released alongside this report for independent verification.
 Design problems for nuclear power system components increasingly require
 choosing among a large number of discrete combinatorial options against an
 objective and constraints with no closed form: evaluating a single candidate
-requires a computationally expensive numerical solve. The PI's completed
+requires a computationally expensive numerical solve. A completed line of
 preliminary work applied a surrogate-screened combinatorial search framework
 to a BWR $10\times10$ nuclear fuel assembly design problem, reducing the
 number of expensive DRAGON5 lattice-physics evaluations from a
 literature-reported budget of 36{,}000 per case to 44 total across two
-problem variants~\cite{chang2026}. A subsequent NSF ERI proposal (RQ3)
-proposes validating the same framework on a structurally different
-second engineering domain: discrete fusion breeding-blanket material layout
-design, evaluated via Monte Carlo neutron transport simulation in OpenMC.
+problem variants~\cite{chang2026}. This report extends that framework to a
+structurally different second engineering domain: discrete fusion
+breeding-blanket material layout design, evaluated via Monte Carlo neutron
+transport simulation in OpenMC.
 
-The proposal's Section 3.3.2 specifies a small, brute-force-checkable
-verification instance before attempting the full-scale $I=80$ WCLL-style
-problem: a reduced blanket with $I=4$ toroidal sectors and $K=4$ candidate
-material recipes per sector, giving $4^4=256$ total configurations --- small
-enough to enumerate exhaustively on a single workstation, and therefore
-capable of providing a \emph{true} optimum (or, in the multi-objective case
-addressed here, a true Pareto frontier) against which any later
-approximate search can be checked for optimality directly, not merely for
-exceeding an external target.
+Before attempting a full-scale, WCLL-style breeding-blanket design problem
+(on the order of $I=80$ discrete modules, for which brute-force enumeration
+of the design space is impossible), we first build a small,
+brute-force-checkable verification instance: a reduced blanket with $I=4$
+toroidal sectors and $K=4$ candidate material recipes per sector, giving
+$4^4=256$ total configurations --- small enough to enumerate exhaustively
+on a single workstation, and therefore capable of providing a \emph{true}
+optimum (or, in the multi-objective case addressed here, a true Pareto
+frontier) against which any later approximate search can be checked for
+optimality directly, not merely for exceeding an external target.
 
 This report documents the complete construction of that small instance:
 software installation, geometry model, materials, source and tally
 definitions, the closed-form cost model, and the full 256-configuration
-enumeration results. It is intended as a companion artifact to the NSF ERI
-proposal and as a request for expert feedback on the neutronics modeling
-choices before scaling to the full $I=80$ case.
+enumeration results, together with a surrogate-screened search verified
+directly against that ground truth. It is offered as a self-contained
+technical report and as a request for expert feedback on the neutronics
+modeling choices before scaling to a full-scale design problem.
 
 %======================================================================
 \section{Software Stack}
@@ -160,7 +161,7 @@ in tungsten at 14.1~MeV; and (3) the sector model described below.
 \section{Problem Formulation}
 %======================================================================
 
-Following the proposal's general combinatorial design formulation, the
+Following a general combinatorial design formulation, the
 small instance assigns one of $K=4$ candidate material recipes to each of
 $I=4$ discrete blanket sectors:
 \[
@@ -179,9 +180,8 @@ no oracle call (Section~\ref{sec:cost}).
 \end{itemize}
 
 The recipes correspond to four $^6$Li enrichment levels,
-$\varepsilon\in\{0.15,0.30,0.60,0.90\}$, matching the recipe set already
-established in the parent proposal's cost analysis for the full-scale
-$I=80$ case.
+$\varepsilon\in\{0.15,0.30,0.60,0.90\}$, chosen to span a representative
+range from near-natural to highly enriched $^6$Li content.
 
 %======================================================================
 \section{Geometry Model}
@@ -189,7 +189,7 @@ $I=80$ case.
 
 \subsection{Design intent}
 
-The proposal's Figure~2 describes the small instance as a torus divided
+The design intent for the small instance is a torus divided
 into $I=4$ sectors going around the main (toroidal) ring, each assigned one
 recipe independently. This section documents the geometry actually built,
 including the sequence of CAD construction failures encountered and the
@@ -258,10 +258,10 @@ and assigned to a named CadQuery assembly component
 seconds and \texttt{cad\_to\_dagmc} correctly extracted 68 surfaces
 (14{,}892 mesh vertices) from the four solids.
 
-\textbf{Simplification relative to the full-scale design.} This geometry
-is a \emph{solid} torus segment, not the hollow, multi-layer (first
-wall / breeder zone / structural fraction) shell described in the parent
-proposal's full-scale $I=80$ model, and its dimensions ($R=300$~cm,
+\textbf{Simplification relative to a full-scale design.} This geometry
+is a \emph{solid} torus segment, not a hollow, multi-layer (first
+wall / breeder zone / structural fraction) shell such as would be needed
+for a WCLL-style full-scale ($I=80$) model, and its dimensions ($R=300$~cm,
 $r=20$~cm) were chosen for fast turnaround during pipeline verification
 rather than calibrated to any specific reference device (e.g.\ WCLL/DEMO).
 Reintroducing the hollow shell (first wall + breeder zone) using a
@@ -348,10 +348,9 @@ tbr_tally.scores = ['H3-production']
 \label{sec:cost}
 %======================================================================
 
-The material cost of a given $^6$Li enrichment $\varepsilon$ follows the
-same blended-cost model as the parent proposal's full-scale cost analysis
-(itself derived from a published MIT S.M.\ thesis material-cost model
-\cite{webber2025}):
+The material cost of a given $^6$Li enrichment $\varepsilon$ follows a
+blended-cost model derived from a published MIT S.M.\ thesis material-cost
+model \cite{webber2025}:
 \[
 c_{\mathrm{blend}}(\varepsilon) = c_{\mathrm{base}}\cdot F_{\mathrm{base}} + f_{\mathrm{Li}}\cdot\varepsilon\cdot c(\varepsilon),
 \]
@@ -564,21 +563,23 @@ distinguishing closely-spaced frontier points (e.g.\ the two points both
 reporting TBR near 0.1540 at identical cost) with high confidence.
 \item \textbf{No neutron multiplier or structural material.} Only PbLi is
 present; no beryllium or Be$_{12}$Ti multiplier, and no Eurofer/SS316
-structural fraction, both of which are part of the full-scale design
-described in the parent proposal.
+structural fraction, both of which would be part of a more realistic
+full-scale design.
 \end{enumerate}
 
-\subsection{Relationship to the parent proposal}
+\subsection{Relationship to full-scale validation}
 
-This report fulfills the first half of the parent proposal's Section 3.3.2
-verification strategy: a true, exhaustively-computed Pareto frontier for a
-small instance. The proposal's stated next step is to run the same
-surrogate-screened Adaptive Randomized Rounding (ARR) search framework
-used in the completed nuclear-fuel-assembly case study against this small
-instance, and to check its own approximate Pareto frontier directly
-against the ground truth reported here --- rather than only against a
-literature-reported target, which was the strongest verification available
-for the nuclear fuel case. That comparison is carried out below.
+This report establishes a true, exhaustively-computed Pareto frontier for
+a small instance, intended as a ground-truth benchmark for validating a
+surrogate-screened search framework before it is applied to a full-scale
+design problem too large to enumerate. The natural next step is to run
+the same surrogate-screened Adaptive Randomized Rounding (ARR) search
+framework used in a completed nuclear-fuel-assembly case study against
+this small instance, and to check its own approximate Pareto frontier
+directly against the ground truth reported here --- rather than only
+against a literature-reported target, which was the strongest
+verification available for the nuclear fuel case. That comparison is
+carried out below.
 
 %======================================================================
 \section{Surrogate-Screened Search Verification}
